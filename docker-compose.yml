@@ -13,6 +13,8 @@ services:
       MYSQL_DATABASE: db
       MYSQL_PASSWORD: password
       MYSQL_USER: user
+    networks:
+      - internal-api
 
   mysql_user:
     image: mysql:5.7
@@ -32,3 +34,8 @@ services:
       - .:/go/ # マウントディレクトリ指定
     ports:
       - 3001:3001
+    networks:
+      - internal-api
+networks:
+  internal-api:
+    external: true

@@ -1,0 +1,34 @@
+version: "3" # composeファイルのバーション指定
+services:
+  api_user: # service名
+    build: ./api_user # ビルドに使用するDockerfileがあるディレクトリ指定
+    tty: true # コンテナの起動永続化
+    volumes:
+      - .:/go/ # マウントディレクトリ指定
+    ports:
+      - 3000:3000
+    depends_on:
+      - mysql_user
+    environment:
+      MYSQL_DATABASE: db
+      MYSQL_PASSWORD: password
+      MYSQL_USER: user
+
+  mysql_user:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+
+  api_test: # service名
+    build: ./api_test # ビルドに使用するDockerfileがあるディレクトリ指定
+    tty: true # コンテナの起動永続化
+    volumes:
+      - .:/go/ # マウントディレクトリ指定
+    ports:
+      - 3001:3001

@@ -1,10 +1,4 @@
-version: "3"
-
-networks:
-  internal-api:
-    external: true
-  kong-net:
-    external: false
+version: "3.9"
 
 x-kong-config: &kong-env
   KONG_DATABASE: ${KONG_DATABASE:-off}
@@ -24,52 +18,11 @@ volumes:
       type: tmpfs
       device: tmpfs
 
-secrets:
-  kong_postgres_password:
-    file: ./kong/POSTGRES_PASSWORD
+networks:
+  kong-net:
+    external: false
 
 services:
-  api_user:
-    container_name: api_user
-    build: ./api_user
-    tty: true
-    volumes:
-      - .:/go/
-    ports:
-      - 3000:3000
-    depends_on:
-      - mysql_user
-    environment:
-      MYSQL_DATABASE: db
-      MYSQL_PASSWORD: password
-      MYSQL_USER: user
-    networks:
-      - internal-api
-      - kong-net
-
-  mysql_user:
-    image: mysql:5.7
-    container_name: db
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
-
-  api_test:
-    container_name: api_test
-    build: ./api_test
-    tty: true
-    volumes:
-      - .:/go/
-    ports:
-      - 3001:3001
-    networks:
-      - internal-api
-      - kong-net
-
   kong-migrations:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
     command: kong migrations bootstrap
@@ -102,8 +55,6 @@ services:
     platform: linux/arm64
     image: "${KONG_DOCKER_TAG:-kong:latest}"
     user: "${KONG_USER:-kong}"
-    depends_on:
-      - kong_db
     environment:
       <<: *kong-env
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
@@ -119,8 +70,15 @@ services:
     networks:
       - kong-net
     ports:
+      # The following two environment variables default to an insecure value (0.0.0.0)
+      # according to the CIS Security test.
       - "${KONG_INBOUND_PROXY_LISTEN:-0.0.0.0}:8000:8000/tcp"
       - "${KONG_INBOUND_SSL_PROXY_LISTEN:-0.0.0.0}:8443:8443/tcp"
+      # Making them mandatory but undefined, like so would be backwards-breaking:
+      # - "${KONG_INBOUND_PROXY_LISTEN?Missing inbound proxy host}:8000:8000/tcp"
+      # - "${KONG_INBOUND_SSL_PROXY_LISTEN?Missing inbound proxy ssl host}:8443:8443/tcp"
+      # Alternative is deactivating check 5.13 in the security bench, if we consider Kong's own config to be enough security here
+
       - "127.0.0.1:8001:8001/tcp"
       - "127.0.0.1:8444:8444/tcp"
     healthcheck:
@@ -133,13 +91,12 @@ services:
     volumes:
       - kong_prefix_vol:${KONG_PREFIX:-/var/run/kong}
       - kong_tmp_vol:/tmp
-      - ./kong/config:/opt/kong
+      - ./config:/opt/kong
     security_opt:
       - no-new-privileges
 
   kong_db:
     image: postgres:9.5
-    container_name: kong_db
     profiles: ["database"]
     environment:
       POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
@@ -159,3 +116,9 @@ services:
       - kong-net
     volumes:
       - kong_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+secrets:
+  kong_postgres_password:
+    file: ./POSTGRES_PASSWORD

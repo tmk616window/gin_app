@@ -32,14 +32,12 @@ func createPrintJob(invoiceId int) {
 
     var p PrintJob
     // Call PrinterService via RESTful interface
-
-
-
+    
     _, err := client.R().
         SetBody(PrintJob{Format: "A4", InvoiceId: invoiceId}).
         SetResult(&p).
         EnableTrace().
-        Post("http://localhost:3001/print-jobs")
+        Post("http://api_test:3001/print-job")
 
     if err != nil {
         log.Println("InvoiceGenerator: unable to connect PrinterService")

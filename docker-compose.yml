@@ -3,6 +3,8 @@ version: "3"
 networks:
   internal-api:
     external: true
+  nternal-api-user:
+    external: true
   kong-net:
     external: false
 
@@ -46,6 +48,7 @@ services:
     networks:
       - internal-api
       - kong-net
+      - nternal-api-user
 
   mysql_user:
     image: mysql:5.7
@@ -57,6 +60,8 @@ services:
       MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
+    networks:
+      - nternal-api-user
 
   api_test:
     container_name: api_test
@@ -119,8 +124,8 @@ services:
     networks:
       - kong-net
     ports:
-      - "${KONG_INBOUND_PROXY_LISTEN:-0.0.0.0}:8000:8000/tcp"
-      - "${KONG_INBOUND_SSL_PROXY_LISTEN:-0.0.0.0}:8443:8443/tcp"
+      - "8000:8000/tcp"
+      - "8443:8443/tcp"
       - "127.0.0.1:8001:8001/tcp"
       - "127.0.0.1:8444:8444/tcp"
     healthcheck:

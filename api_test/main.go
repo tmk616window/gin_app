@@ -1,10 +1,6 @@
 package main
 
 import (
-	"log"
-	"math/rand"
-	"time"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,17 +12,8 @@ type PrintJob struct {
 
 func main() {
 	router := gin.Default()
-	router.POST("/print-job", func(c *gin.Context) {
-		var p PrintJob
-        if err := c.ShouldBindJSON(&p); err != nil {
-            c.JSON(400, gin.H{"error": "Invalid input!"})
-            return
-		}
-		log.Printf("PrintService: creating new print job from invoice #%v...", p.InvoiceId)
-		rand.Seed(time.Now().UnixNano())
-        p.JobId = rand.Intn(1000)
-        log.Printf("PrintService: created print job #%v", p.JobId)
-        c.JSON(200, p)
+	router.POST("/test", func(c *gin.Context) {
+        c.JSON(200, gin.H{"user": "test"})
 	})
     router.Run(":3001")
 }

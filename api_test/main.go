@@ -12,7 +12,7 @@ type PrintJob struct {
 
 func main() {
 	router := gin.Default()
-	router.POST("/test", func(c *gin.Context) {
+	router.GET("/test", func(c *gin.Context) {
         c.JSON(200, gin.H{"user": "test"})
 	})
     router.Run(":3001")

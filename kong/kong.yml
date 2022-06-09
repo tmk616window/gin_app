@@ -2,12 +2,12 @@
 _format_version: "1.1"
 
 services:
-  - name: api-user
-    url: http://localhost:3000
-    routes:
-      - name: api-user-routes
-        paths:
-          - /api-user
+  # - name: api-user
+  #   url: http://localhost:3000
+  #   routes:
+  #     - name: api-user-routes
+  #       paths:
+  #         - /api-user
   - name: api-test
     url: http://localhost:3001
     routes:

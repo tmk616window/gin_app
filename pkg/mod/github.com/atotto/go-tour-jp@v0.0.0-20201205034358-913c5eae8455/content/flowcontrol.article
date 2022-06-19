@@ -1,0 +1,166 @@
+Flow control statements: for, if, else, switch and defer
+条件文とループ、switch、defer を使ってコードの流れをコントロールする方法を学びます。
+
+The Go Authors
+https://golang.org
+
+* For
+
+基本的に、 `for` ループはセミコロン `;` で3つの部分に分かれています:
+
+- 初期化ステートメント: 最初のイテレーション(繰り返し)の前に初期化が実行されます
+- 条件式: イテレーション毎に評価されます
+- 後処理ステートメント: イテレーション毎の最後に実行されます
+
+初期化ステートメントは、短い変数宣言によく利用します。その変数は `for` ステートメントのスコープ内でのみ有効です。
+
+ループは、条件式の評価が `false` となった場合にイテレーションを停止します。
+
+_Note_: 他の言語、C言語 や Java、JavaScriptの `for` ループとは異なり、 `for` ステートメントの3つの部分を括る括弧 `(`)` はありません。なお、中括弧 `{`}` は常に必要です。
+
+.play flowcontrol/for.go
+
+* For continued
+
+初期化と後処理ステートメントの記述は任意です。
+
+.play flowcontrol/for-continued.go
+
+* For is Go's "while"
+
+セミコロン(;)を省略することもできます。つまり、C言語などにある `while` は、Goでは `for` だけを使います。
+
+.play flowcontrol/for-is-gos-while.go
+
+* Forever
+
+ループ条件を省略すれば、無限ループ( _infinite_loop_ )になりますので、無限ループをコンパクトに表現できます。
+
+.play flowcontrol/forever.go
+
+* If
+
+Go言語の `if` ステートメントは、先ほどの `for` ループと同様に、括弧 `(`)` は不要で、中括弧 `{`}` は必要です。
+
+(もうおなじみですね！)
+
+.play flowcontrol/if.go
+
+* If with a short statement
+
+`if` ステートメントは、 `for` のように、条件の前に、評価するための簡単なステートメントを書くことができます。
+
+ここで宣言された変数は、 `if` のスコープ内だけで有効です。
+
+(ためしに最後の `return` 文で、 `v` を使ってみてください。
+# 補足
+スコープの外なので使えないですよね？)
+
+.play flowcontrol/if-with-a-short-statement.go
+
+* If and else
+
+なお、 `if` ステートメントで宣言された変数は、 `else` ブロック内でも使うことができます。
+
+(コードの補足: `main` の `fmt.Println` は、2つの `pow` が先に実行されてから実行されます)
+
+.play flowcontrol/if-and-else.go
+
+* Exercise: Loops and Functions
+
+関数とループを使った簡単な練習として、平方根の計算を実装してみましょう: 数値 x が与えられたときに z² が最も x に近い数値 z を求めたいと思います。
+
+コンピュータは通常ループを使って x の平方根を計算します。
+いくつかの z を推測することから始めて、z² がどれほど x に近づいているかに応じて z を調整できます。
+
+	z -= (z*z - x) / (2*z)
+
+実際の平方根に近い答えになるまでこの調整を繰り返すことによって、推測はより良いものなります。
+
+これを `func`Sqrt` に実装してください。
+何が入力されても z の適切な開始推測値は 1 です。
+まず計算を 10 回繰り返してそれぞれの z を表示します。
+x (1, 2, 3, ...) のさまざまな値に対する答えがどれほど近似し、
+推測が速くなるかを確認してください。
+
+Hint: 浮動小数点の変数を初期化して宣言するには、型でキャストするか、浮動小数点を使ってみてください:
+
+	z := 1.0
+	z := float64(1)
+
+次に値が変化しなくなった (もしくはごくわずかな変化しかしなくなった) 場合にループを停止させます。
+それが 10 回よりも多いか少ないかを確認してください。
+x や x/2 のように他の初期推測の値を z に与えてみてください。
+あなたの関数の結果は標準ライブラリの [[https://golang.org/pkg/math/#Sqrt][math.Sqrt]] にどれくらい近づきましたか？
+
+(メモ: アルゴリズムの詳細について興味がある人のために説明すると、
+上の z² − xという式は、z² が最終的な期待値 x からどのくらい離れているかを表しています。
+除算の 2z は z² の導関数で、z² の変化の大きさに応じて z の調整値を変化させます。
+この一般的なアプローチは[[https://ja.wikipedia.org/wiki/%E3%83%8B%E3%83%A5%E3%83%BC%E3%83%88%E3%83%B3%E6%B3%95][ニュートン法]]と呼ばれています。
+多くの関数で有効ですが、平方根で特に有効です。)
+
+.play flowcontrol/exercise-loops-and-functions.go
+
+* Switch
+
+`switch` ステートメントは `if`-`else` ステートメントのシーケンスを短く書く方法です。
+
+Go の switch は C や C++、Java、JavaScript、PHP の switch と似ていますが、
+Go では選択された case だけを実行してそれに続く全ての case は実行されません。
+これらの言語の各 case の最後に必要な `break` ステートメントが Go では自動的に提供されます。
+もう一つの重要な違いは Go の switch の case は定数である必要はなく、
+関係する値は整数である必要はないということです。
+
+.play flowcontrol/switch.go
+
+* Switch evaluation order
+
+switch caseは、上から下へcaseを評価します。
+caseの条件が一致すれば、そこで停止(自動的にbreak)します。
+
+(例えば、
+
+	switch i {
+	case 0:
+	case f():
+	}
+
+では、 `i==0` であれば、 `case`0` でbreakされるため `f` は呼び出されません)
+
+#appengine: Note: Go playground上の時間は、いつも "2009-11-10 23:00:00 UTC" です。
+#appengine: この値の意味は、読者の楽しみのために残しておきます(^^)
+
+.play flowcontrol/switch-evaluation-order.go
+
+* Switch with no condition
+
+条件のないswitchは、 `switch`true` と書くことと同じです。
+
+このswitchの構造は、長くなりがちな "if-then-else" のつながりをシンプルに表現できます。
+
+.play flowcontrol/switch-with-no-condition.go
+
+* Defer
+
+`defer` ステートメントは、 `defer` へ渡した関数の実行を、呼び出し元の関数の終わり(returnする)まで遅延させるものです。
+
+`defer` へ渡した関数の引数は、すぐに評価されますが、その関数自体は呼び出し元の関数がreturnするまで実行されません。
+
+.play flowcontrol/defer.go
+
+* Stacking defers
+
+`defer` へ渡した関数が複数ある場合、その呼び出しはスタック( _stack_ )されます。
+呼び出し元の関数がreturnするとき、 `defer` へ渡した関数は [[https://ja.wikipedia.org/wiki/LIFO][LIFO(last-in-first-out)]] の順番で実行されます。
+
+`defer` ステートメントについてさらに学ぶには、
+[[https://blog.golang.org/defer-panic-and-recover][こちら(blog post)]]を読んでみてください。
+
+.play flowcontrol/defer-multi.go
+
+* Congratulations!
+
+この章はこれで終わりです。
+
+[[/list][章のリスト]]から学びたいところを見ても良いですし、
+[[javascript:click('.next-page')][>]] をクリックして次の章へ進みましょう。

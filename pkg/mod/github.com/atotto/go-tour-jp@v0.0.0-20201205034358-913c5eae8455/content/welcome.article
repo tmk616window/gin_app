@@ -1,0 +1,125 @@
+Welcome!
+この Tour の使い方を学びましょう: さまざまなレッスンを切り替える方法やコードの実行方法が含まれます。
+
+The Go Authors
+https://golang.org
+
+* Hello, 世界
+
+[[https://golang.org/][プログラミング言語Go]] Tour  ( *Go言語基礎文法最速マスター* ) へようこそ！
+
+Go Tour は複数の章で構成されています。
+[[javascript:highlight(".logo")][左上の A Tour of Go から辿ることができます。]]
+
+また、目次は
+[[javascript:highlightAndClick(".nav")][右上の menu をクリックすることでいつでも参照できます。]]
+
+Go Tour は、一連のスライドと演習課題(Exercise)で構成されています。
+
+ページを切り替えるには:
+
+- [[javascript:highlight(".prev-page")][下の<]] または `PageUp` で前のページ
+
+- [[javascript:highlight(".next-page")][下の>]] または `PageDown` で次のページ
+
+で移動できます。
+
+Go Tour はインタラクティブです。
+[[javascript:highlightAndClick("#run")][Runボタンをクリック]](もしくは `Shift` + `Enter`)
+すると、コードが
+#appengine: リモートのサーバ
+このコンピュータ
+でコンパイルされ、実行されます。
+実行結果はコードの下に表示されます。
+
+これらのコードは、Go言語の様々な特徴を示しています。 Go Tour にあるプログラムは、Goを学習するための出発点となることでしょう。
+
+さっそくコードを修正し、実行してみましょう。
+
+[[javascript:highlightAndClick("#format")][Formatボタンをクリック]]、または `Ctrl` + `Enter` でコードをフォーマット(整形)します。
+これは [[https://golang.org/cmd/gofmt/][gofmt]] コマンドを利用しています。
+Goのコードを書く際は、必ずこのツールを一緒に使いましょう。
+[[javascript:highlightAndClick(".syntax-checkbox")][syntaxボタンをクリック]]するとシンタックスハイライトの切り替えができます。
+
+準備ができたら、次のページへ進みましょう！
+
+注：本サイト "A Tour of Go" は、 [[https://tour.golang.org][A Tour of Go]] を日本語訳したものです。日本語翻訳プロジェクトは[[https://github.com/atotto/go-tour-jp][こちら]]です。
+
+.play welcome/hello.go
+
+* Go local
+
+Go Tour は他の言語でも利用できます:
+
+The tour is available in other languages:
+
+- [[https://tour.golang.org/][English - 英語]]
+- [[https://go-tour-ar.appspot.com/][Arabic — العربية]]
+- [[https://go-tour-br.appspot.com/][Brazilian Portuguese — Português do Brasil]]
+- [[https://go-tour-ca.appspot.com/][Catalan — Català]]
+- [[https://tour.go-zh.org/][Simplified Chinese — 中文（简体）]]
+- [[https://go-tour-zh-tw.appspot.com/][Traditional Chinese — 中文（繁體）]]
+- [[https://go-tour-cz.appspot.com/][Czech — Česky]]
+- [[https://go-tour-fr.appspot.com/][French — Français]]
+- [[https://go-tour-de.appspot.com/][German — Deutsch]]
+- [[https://go-tour-he.appspot.com/][Hebrew — עִבְרִית]]
+- [[https://go-tour-id2.appspot.com/][Indonesian — Bahasa Indonesia]]
+- [[https://go-tour-ita.appspot.com/][Italian — Italiano]]
+- [[https://go-tour-kr.appspot.com/][Korean — 한국어]]
+- [[https://go-tour-ro.appspot.com/][Romanian — Română]]
+- [[https://go-tour-ru-ru.appspot.com/][Russian - Русский]]
+- [[https://gotour-es.appspot.com/][Spanish — Español]]
+- [[https://go-tour-th.appspot.com/][Thai - ภาษาไทย]]
+- [[https://go-tour-turkish.appspot.com/][Turkish - Türkçe]]
+- [[https://go-tour-ua.appspot.com/][Ukrainian — Українська]]
+- [[https://go-tour-uz.appspot.com/][Uzbek — Ўзбекча]]
+
+[[javascript:highlightAndClick(".next-page")]["next" ボタンをクリック]] するか `PageDown` で進みましょう。
+
+#appengine: * Go offline
+#appengine: 
+#appengine: この Go Tour はスタンドアロンのプログラムとして動かすこともできます。
+#appengine: 
+#appengine: スタンドアロンの Go Tour は、自身のマシンでコードをビルドし、実行するため、より高速になります。
+#appengine: 
+#appengine: ローカルで Go Tour を実行するためには、はじめに、
+#appengine: [[https://golang.org/dl/][Goのダウンロードとインストール]]
+#appengine: し、コマンドラインで以下のように実行します:
+#appengine: 
+#appengine: 	go tool tour
+#appengine: 
+#appengine: 上記のコマンドの実行に問題がある場合は手動でこのツアーをインストールして実行できます:
+#appengine: 
+#appengine:   go get github.com/atotto/go-tour-jp/gotour
+#appengine:   gotour
+#appengine: 
+#appengine: gotour ではローカルバージョンの tour を表示するウェブブラウザが開きます。
+#appengine: 
+#appengine: もちろん、ここのウェブサイトでGo Tourを続けてもらって構いません。
+
+#appengine: * The Go Playground
+#appengine: 
+#appengine: Go Tour は、 [[https://golang.org/][golang.org]] のサーバで稼働しているウェブサービスの
+#appengine: [[https://play.golang.org/][Go Playground]] を利用しています。
+#appengine: 
+#appengine: このウェブサービスは、Goのコードを受け取ると[[https://ja.wikipedia.org/wiki/%E3%82%B5%E3%83%B3%E3%83%89%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9_(%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3)][サンドボックス]]内でコンパイル、リンク、実行し、
+#appengine: 実行結果の出力を返します。
+#appengine: 
+#appengine: ただし、 playground で実行できるプログラムには制限があります:
+#appengine: 
+#appengine: - playground 上はいつも "2009-11-10 23:00:00 UTC" (この値の意味は、読者の楽しみのために残しておきます(^^))です。これにより、同じ出力結果を得ることが容易になります。
+#appengine: 
+#appengine: - 実行時間とCPU、メモリの使用量に制限があり、プログラムは外部のネットワークホストへアクセス出来ません。
+#appengine: 
+#appengine: playgroundは、最新の安定バージョンのGoを利用します。
+#appengine: 
+#appengine: 詳細は、 "[[https://blog.golang.org/playground][Inside the Go Playground]]" を読んでみてください。
+#appengine:
+#appengine: .play welcome/sandbox.go
+
+* Congratulations
+
+Go Tour の最初の章が終わりました。
+
+[[javascript:highlightAndClick(".logo")][A Tour of Go をクリック]]して学びたいところを見ても良いですし、
+直接 [[javascript:click('.next-page')][>]] をクリックして次の章へ進みましょう。

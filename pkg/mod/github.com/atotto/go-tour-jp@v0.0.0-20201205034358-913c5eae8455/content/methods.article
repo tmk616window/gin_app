@@ -1,0 +1,396 @@
+Methods and interfaces
+このレッスンではメソッドとインターフェース、オブジェクトとその動作を定義する構造体について説明します。
+
+The Go Authors
+https://golang.org
+
+* Methods
+
+Goには、クラス( _class_ )のしくみはありませんが、型にメソッド( _method_ )を定義できます。
+
+メソッドは、特別なレシーバ( _receiver_ )引数を関数に取ります。
+
+レシーバは、 `func` キーワードとメソッド名の間に自身の引数リストで表現します。
+
+この例では、 `Abs` メソッドは `v` という名前の `Vertex` 型のレシーバを持つことを意味しています。
+
+.play methods/methods.go
+
+* Methods are functions
+
+メソッドは、レシーバ引数を伴う関数、でしたね？
+
+この `Abs` は、先ほどの例から機能を変えずに通常の関数として記述しています。
+
+.play methods/methods-funcs.go
+
+* Methods continued
+
+例で挙げたstructの型だけではなく、任意の型(type)にもメソッドを宣言できます。
+
+例は、 `Abs` メソッドを持つ、数値型の `MyFloat` 型です。
+
+レシーバを伴うメソッドの宣言は、レシーバ型が同じパッケージにある必要があります。
+他のパッケージに定義している型に対して、レシーバを伴うメソッドを宣言できません
+（組み込みの `int` などの型も同様です）。
+
+.play methods/methods-continued.go
+
+* Pointer receivers
+
+ポインタレシーバでメソッドを宣言できます。
+
+これはレシーバの型が、ある型 `T` への構文 `*T` があることを意味します。
+（なお、 `T` は `*int` のようなポインタ自身を取ることはできません）
+
+例では `*Vertex` に `Scale` メソッドが定義されています。
+
+ポインタレシーバを持つメソッド(ここでは `Scale` )は、レシーバが指す変数を変更できます。
+レシーバ自身を更新することが多いため、変数レシーバよりもポインタレシーバの方が一般的です。
+
+`Scale` の宣言(line 16)から `*` を消し、プログラムの振る舞いがどう変わるのかを確認してみましょう。
+
+変数レシーバでは、 `Scale` メソッドの操作は元の `Vertex` 変数のコピーを操作します。
+（これは関数の引数としての振るまいと同じです）。
+つまり `main` 関数で宣言した `Vertex` 変数を変更するためには、`Scale` メソッドはポインタレシーバにする必要があるのです。
+
+.play methods/methods-pointers.go
+
+* Pointers and functions
+
+ここで、 `Abs` と `Scale` メソッドは関数として書きなおしてあります。
+
+再度、line 16から `*` を消してください。
+なぜ振る舞いが変わったのかわかりますか？
+コンパイルするために、さらに何が必要でしょうか。
+
+(よくわからなくても、次のページに行きましょう)
+
+.play methods/methods-pointers-explained.go
+
+* Methods and pointer indirection
+
+下の2つの呼び出しを比べると、ポインタを引数に取る `ScaleFunc` 関数は、ポインタを渡す必要があることに気がつくでしょう:
+
+	var v Vertex
+	ScaleFunc(v, 5)  // Compile error!
+	ScaleFunc(&v, 5) // OK
+
+メソッドがポインタレシーバである場合、呼び出し時に、変数、または、ポインタのいずれかのレシーバとして取ることができます:
+
+	var v Vertex
+	v.Scale(5)  // OK
+	p := &v
+	p.Scale(10) // OK
+
+`v.Scale(5)` のステートメントでは、 `v` は変数であり、ポインタではありません。
+メソッドでポインタレシーバが自動的に呼びだされます。
+`Scale` メソッドはポインタレシーバを持つ場合、Goは利便性のため、 `v.Scale(5)` のステートメントを `(&v).Scale(5)` として解釈します。
+
+.play methods/indirection.go
+
+* Methods and pointer indirection (2)
+
+
+逆にも見てみましょう。
+
+変数の引数を取る関数は、特定の型の変数を取る必要があります:
+
+	var v Vertex
+	fmt.Println(AbsFunc(v))  // OK
+	fmt.Println(AbsFunc(&v)) // Compile error!
+
+メソッドが変数レシーバである場合、呼び出し時に、変数、または、ポインタのいずれかのレシーバとして取ることができます:
+
+	var v Vertex
+	fmt.Println(v.Abs()) // OK
+	p := &v
+	fmt.Println(p.Abs()) // OK
+
+この場合、 `p.Abs()` は `(*p).Abs()` として解釈されます。
+
+.play methods/indirection-values.go
+
+* Choosing a value or pointer receiver
+
+ポインタレシーバを使う2つの理由があります。
+
+ひとつは、メソッドがレシーバが指す先の変数を変更するためです。
+
+ふたつに、メソッドの呼び出し毎に変数のコピーを避けるためです。
+例えば、レシーバが大きな構造体である場合に効率的です。
+
+例では、 `Abs` メソッドはレシーバ自身を変更する必要はありませんが、 `Scale` と `Abs` は両方とも `*Vertex` 型のレシーバです。
+
+一般的には、値レシーバ、または、ポインタレシーバのどちらかですべてのメソッドを与え、混在させるべきではありません。
+(この理由は数ページ後にわかります)
+
+.play methods/methods-with-pointer-receivers.go
+
+* Interfaces
+
+interface(インタフェース)型は、メソッドのシグニチャの集まりで定義します。
+
+そのメソッドの集まりを実装した値を、interface型の変数へ持たせることができます。
+
+*注意:* この例は、22行目でエラーになります。
+`Abs` メソッドが、 `Vertex` ではなく `*Vertex` の定義であり、
+`Vertex` が `Abser` インタフェースを実装していないということになるためエラーとなります。
+
+.play methods/interfaces.go
+
+* Interfaces are implemented implicitly
+
+型にメソッドを実装していくことによって、インタフェースを実装(満た)します。
+インタフェースを実装することを明示的に宣言する必要はありません( "implements" キーワードは必要ありません)。
+
+暗黙のインターフェースは、インターフェースの定義をその実装から切り離します。
+インターフェースの実装は、事前の取り決めなしにパッケージに現れることがあります。
+
+.play methods/interfaces-are-satisfied-implicitly.go
+
+* Interface values
+
+下記のように、インターフェースの値は、値と具体的な型のタプルのように考えることができます:
+
+	(value, type)
+
+インターフェースの値は、特定の基底になる具体的な型の値を保持します。
+
+インターフェースの値のメソッドを呼び出すと、その基底型の同じ名前のメソッドが実行されます。
+
+.play methods/interface-values.go
+
+* Interface values with nil underlying values
+
+インターフェース自体の中にある具体的な値が nil の場合、メソッドは nil をレシーバーとして呼び出されます。
+
+いくつかの言語ではこれは null ポインター例外を引き起こしますが、Go では nil をレシーバーとして呼び出されても適切に処理するメソッドを記述するのが一般的です(この例では `M` メソッドのように)。
+
+具体的な値として nil を保持するインターフェイスの値それ自体は非 nil であることに注意してください。
+
+.play methods/interface-values-with-nil.go
+
+* Nil interface values
+
+nil インターフェースの値は、値も具体的な型も保持しません。
+
+呼び出す _具体的な_ メソッドを示す型がインターフェースのタプル内に存在しないため、 nil インターフェースのメソッドを呼び出すと、ランタイムエラーになります。
+
+.play methods/nil-interface-values.go
+
+* The empty interface
+
+ゼロ個のメソッドを指定されたインターフェース型は、 _空のインターフェース_ と呼ばれます:
+
+	interface{}
+
+空のインターフェースは、任意の型の値を保持できます。
+(全ての型は、少なくともゼロ個のメソッドを実装しています。)
+
+空のインターフェースは、未知の型の値を扱うコードで使用されます。
+例えば、 `fmt.Print` は `interface{}` 型の任意の数の引数を受け取ります。
+
+.play methods/empty-interface.go
+
+* Type assertions
+
+_型アサーション_ は、インターフェースの値の基になる具体的な値を利用する手段を提供します。
+
+	t := i.(T)
+
+この文は、インターフェースの値 `i` が具体的な型 `T` を保持し、基になる `T` の値を変数 `t` に代入することを主張します。
+
+`i` が `T` を保持していない場合、この文は panic を引き起こします。
+
+インターフェースの値が特定の型を保持しているかどうかを _テスト_ するために、型アサーションは2つの値(基になる値とアサーションが成功したかどうかを報告するブール値)を返すことができます。
+
+	t, ok := i.(T)
+
+`i` が `T` を保持していれば、 `t` は基になる値になり、 `ok` は真(true)になります。
+
+そうでなければ、 `ok` は偽(false)になり、 `t` は型 `T` のゼロ値になり panic は起きません。
+
+この構文と map から読み取る構文との類似点に注意してください。
+
+.play methods/type-assertions.go
+
+* Type switches
+
+_型switch_ はいくつかの型アサーションを直列に使用できる構造です。
+
+型switchは通常のswitch文と似ていますが、型switchのcaseは型(値ではない)を指定し、それらの値は指定されたインターフェースの値が保持する値の型と比較されます。
+
+	switch v := i.(type) {
+	case T:
+		// here v has type T
+	case S:
+		// here v has type S
+	default:
+		// no match; here v has the same type as i
+	}
+
+型switchの宣言は、型アサーション `i.(T)` と同じ構文を持ちますが、特定の型 `T` はキーワード `type` に置き換えられます。
+
+このswitch文は、インターフェースの値 `i` が 型 `T` または `S` の値を保持するかどうかをテストします。
+`T` および `S` の各caseにおいて、変数 `v` はそれぞれ 型 `T` または `S` であり、 `i` によって保持される値を保持します。
+defaultの場合(一致するものがない場合)、変数 `v` は同じインターフェース型で値は `i` となります。
+
+.play methods/type-switches.go
+
+* Stringers
+
+もっともよく使われているinterfaceの一つに [[//golang.org/pkg/fmt/][`fmt` パッケージ]] に定義されている [[//golang.org/pkg/fmt/#Stringer][`Stringer`]] があります:
+
+	type Stringer interface {
+		String() string
+	}
+
+`Stringer` インタフェースは、stringとして表現することができる型です。
+`fmt` パッケージ(と、多くのパッケージ)では、変数を文字列で出力するためにこのインタフェースがあることを確認します。
+
+.play methods/stringer.go
+
+* Exercise: Stringers
+
+`IPAddr` 型を実装してみましょう
+IPアドレスをドットで4つに区切った( _dotted_quad_ )表現で出力するため、 `fmt.Stringer` インタフェースを実装してください。
+
+例えば、 `IPAddr{1,`2,`3,`4}` は、 `"1.2.3.4"` として出力するようにします。
+
+.play methods/exercise-stringer.go
+
+* Errors
+
+Goのプログラムは、エラーの状態を `error` 値で表現します。
+
+`error` 型は `fmt.Stringer` に似た組み込みのインタフェースです:
+
+	type error interface {
+		Error() string
+	}
+
+( `fmt.Stringer` と同様に、 `fmt` パッケージは、変数を文字列で出力する際に `error` インタフェースを確認します。 )
+
+よく、関数は `error` 変数を返します。そして、呼び出し元はエラーが `nil` かどうかを確認することでエラーをハンドル(取り扱い)します。
+
+	i, err := strconv.Atoi("42")
+	if err != nil {
+		fmt.Printf("couldn't convert number: %v\n", err)
+		return
+	}
+	fmt.Println("Converted integer:", i)
+
+nil の `error` は成功したことを示し、 nilではない `error` は失敗したことを示します。
+
+.play methods/errors.go
+
+* Exercise: Errors
+
+`Sqrt` 関数を [[/flowcontrol/8][以前の演習]] からコピーし、 `error` の値を返すように修正してみてください。
+
+`Sqrt` は、複素数をサポートしていないので、負の値が与えられたとき、nil以外のエラー値を返す必要があります。
+
+新しい型:
+
+	type ErrNegativeSqrt float64
+
+を作成してください。
+
+そして、 `ErrNegativeSqrt(-2).Error()` で、 `"cannot`Sqrt`negative`number:`-2"` を返すような:
+
+	func (e ErrNegativeSqrt) Error() string
+
+メソッドを実装し、 `error` インタフェースを満たすようにします。
+
+*注意:* `Error` メソッドの中で、 `fmt.Sprint(e)` を呼び出すことは、無限ループのプログラムになることでしょう。
+最初に `fmt.Sprint(float64(e))` として `e` を変換しておくことで、これを避けることができます。
+なぜでしょうか？
+
+負の値が与えられたとき、 `ErrNegativeSqrt` の値を返すように `Sqrt` 関数を修正してみてください。
+
+.play methods/exercise-errors.go
+
+* Readers
+
+`io` パッケージは、データストリームを読むことを表現する `io.Reader` インタフェースを規定しています。
+
+Goの標準ライブラリには、ファイル、ネットワーク接続、圧縮、暗号化などで、このインタフェースの [[https://golang.org/search?q=Read#Global][多くの実装]] があります。
+
+`io.Reader` インタフェースは `Read` メソッドを持ちます:
+
+	func (T) Read(b []byte) (n int, err error)
+
+`Read` は、データを与えられたバイトスライスへ入れ、入れたバイトのサイズとエラーの値を返します。
+ストリームの終端は、 `io.EOF` のエラーで返します。
+
+例のコードは、 [[//golang.org/pkg/strings/#Reader][`strings.Reader`]] を作成し、
+8 byte毎に読み出しています。
+
+.play methods/reader.go
+
+* Exercise: Readers
+
+ASCII文字 `'A'` の無限ストリームを出力する `Reader` 型を実装してください。
+
+.play methods/exercise-reader.go
+
+* Exercise: rot13Reader
+
+よくあるパターンは、別の `io.Reader` をラップし、ストリームの内容を何らかの方法で変換する[[https://golang.org/pkg/io/#Reader][io.Reader]]です。
+
+例えば、 [[https://golang.org/pkg/compress/gzip/#NewReader][gzip.NewReader]] は、 `io.Reader` (gzipされたデータストリーム)を引数で受け取り、 `*gzip.Reader` を返します。
+その `*gzip.Reader` は、 `io.Reader` (展開したデータストリーム)を実装しています。
+
+`io.Reader` を実装し、 `io.Reader` で[[https://ja.wikipedia.org/wiki/ROT13][ROT13]] 換字式暗号( _substitution_cipher_ )をすべてのアルファベットの文字に適用して読み出すように `rot13Reader` を実装してみてください。
+
+`rot13Reader` 型は提供済みです。
+この `Read` メソッドを実装することで `io.Reader` インタフェースを満たしてください。
+
+.play methods/exercise-rot-reader.go
+
+* Images
+
+[[https://golang.org/pkg/image/#Image][`image`]] パッケージは、以下の `Image` インタフェースを定義しています：
+
+	package image
+
+	type Image interface {
+		ColorModel() color.Model
+		Bounds() Rectangle
+		At(x, y int) color.Color
+	}
+
+Note: `Bounds` メソッドの戻り値である `Rectangle` は、 `image` パッケージの
+[[https://golang.org/pkg/image/#Rectangle][`image.Rectangle`]]
+に定義があります。
+
+(詳細は、 [[https://golang.org/pkg/image/#Image][このドキュメント]] を参照してください。)
+
+`color.Color` と `color.Model` は共にインタフェースですが、定義済みの `color.RGBA` と `color.RGBAModel` を使うことで、このインタフェースを無視できます。
+これらのインタフェースは、[[https://golang.org/pkg/image/color/][image/color]] パッケージで定義されています。
+
+.play methods/images.go
+
+* Exercise: Images
+
+前に解いた、 [[/moretypes/18][画像ジェネレーター]]　を覚えていますか？
+今回は、データのスライスの代わりに `image.Image` インタフェースの実装を返すようにしてみましょう。
+
+自分の `Image` 型を定義し、 [[https://golang.org/pkg/image/#Image][インタフェースを満たすのに必要なメソッド]] を実装し、 `pic.ShowImage` を呼び出してみてください。
+
+`Bounds` は、 `image.Rect(0,`0,`w,`h)` のようにして `image.Rectangle` を返すようにします。
+
+`ColorModel` は、 `color.RGBAModel` を返すようにします。
+
+`At` は、ひとつの色を返します。
+生成する画像の色の値 `v` を `color.RGBA{v,`v,`255,`255}` を利用して返すようにします。
+
+.play methods/exercise-images.go
+
+* Congratulations!
+
+この章はこれで終わりです。
+
+[[/list][章のリスト]]から学びたいところを見ても良いですし、
+[[javascript:click('.next-page')][>]] をクリックして次の章へ進みましょう。

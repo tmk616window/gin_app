@@ -5,6 +5,8 @@ networks:
     external: true
   nternal-api-user:
     external: true
+  internal-api-test:
+    external: true
   kong-net:
     external: true
 
@@ -16,6 +18,8 @@ x-kong-config: &kong-env
   KONG_PG_PASSWORD_FILE: /run/secrets/kong_postgres_password
 
 volumes:
+  user_data:
+  test_data:
   kong_data: {}
   kong_prefix_vol:
     driver_opts:
@@ -33,6 +37,7 @@ secrets:
 services:
   api_user:
     container_name: api_user
+    command: "go run main.go"
     build: ./api_user
     tty: true
     volumes:
@@ -60,21 +65,42 @@ services:
       MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
+    volumes:
+      - user_data:/var/lib/mysql
     networks:
       - nternal-api-user
 
   api_test:
     container_name: api_test
+    command: "go run main.go"
     build: ./api_test
     command: go run main.go
     tty: true
     volumes:
       - .:/go/
+    depends_on:
+      - mysql_test
     ports:
       - 3001:3001
     networks:
       - internal-api
       - kong-net
+      - internal-api-test
+
+  mysql_test:
+    image: mysql:5.7
+    container_name: test_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - test_data:/var/lib/mysql
+    networks:
+      - internal-api-test
 
   kong-migrations:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
@@ -106,8 +132,10 @@ services:
 
   kong:
     platform: linux/arm64
-    image: "${KONG_DOCKER_TAG:-kong:latest}"
-    user: "${KONG_USER:-kong}"
+    # image: "${KONG_DOCKER_TAG:-kong:latest}"
+    build: ./kong
+    command: kong start -c /opt/etc/kong/kong.conf
+    # user: "root"
     depends_on:
       - kong_db
     environment:
@@ -119,7 +147,7 @@ services:
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_PREFIX: ${KONG_PREFIX:-/var/run/kong}
-      KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
+      # KONG_DECLARATIVE_CONFIG: "/opt/kong.yml"
     secrets:
       - kong_postgres_password
     networks:
@@ -139,7 +167,7 @@ services:
     volumes:
       - kong_prefix_vol:${KONG_PREFIX:-/var/run/kong}
       - kong_tmp_vol:/tmp
-      - ./kong:/opt/kong
+      - ./kong:/opt/etc/kong
 
   kong_db:
     image: postgres:9.5

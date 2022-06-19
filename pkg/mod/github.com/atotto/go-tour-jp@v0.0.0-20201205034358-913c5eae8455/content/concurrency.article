@@ -1,0 +1,235 @@
+Concurrency
+
+Go は言語のコア機能の一部として並行処理を提供します。このレッスンではそれらを紹介し、使い方の例をいくつか示します。
+
+The Go Authors
+https://golang.org
+
+* Goroutines
+
+*goroutine* (ゴルーチン)は、Goのランタイムに管理される軽量なスレッドです。
+
+	go f(x, y, z)
+
+と書けば、新しいgoroutineが実行されます。
+
+	f(x, y, z)
+
+`f` , `x` , `y` , `z` の評価は、実行元(current)のgoroutineで実行され、 `f` の実行は、新しいgoroutineで実行されます。
+
+goroutineは、同じアドレス空間で実行されるため、共有メモリへのアクセスは必ず同期する必要があります。
+[[https://golang.org/pkg/sync/][`sync`]] パッケージは同期する際に役に立つ方法を提供していますが、別の方法があるためそれほど必要ありません。
+(次のスライドで説明します)
+
+.play concurrency/goroutines.go
+
+* Channels
+
+チャネル( _Channel_ )型は、チャネルオペレータの `<-` を用いて値の送受信ができる通り道です。
+
+	ch <- v    // v をチャネル ch へ送信する
+	v := <-ch  // ch から受信した変数を v へ割り当てる
+
+(データは、矢印の方向に流れます)
+
+マップとスライスのように、チャネルは使う前に以下のように生成します:
+
+	ch := make(chan int)
+
+通常、片方が準備できるまで送受信はブロックされます。これにより、明確なロックや条件変数がなくても、goroutineの同期を可能にします。
+
+サンプルコードは、スライス内の数値を合算し、2つのgoroutine間で作業を分配します。
+両方のgoroutineで計算が完了すると、最終結果が計算されます。
+
+.play concurrency/channels.go
+
+* Buffered Channels
+
+チャネルは、 *バッファ* ( _buffer_ )として使えます。
+バッファを持つチャネルを初期化するには、 `make` の２つ目の引数にバッファの長さを与えます:
+
+	ch := make(chan int, 100)
+
+バッファが詰まった時は、チャネルへの送信をブロックします。
+バッファが空の時には、チャネルの受信をブロックします。
+
+バッファが詰まるようにサンプルコードを変更し、何が起きるのかを見てみてください。
+
+.play concurrency/buffered-channels.go
+
+* Range and Close
+
+送り手は、これ以上の送信する値がないことを示すため、チャネルを `close` できます。
+受け手は、受信の式に2つ目のパラメータを割り当てることで、そのチャネルがcloseされているかどうかを確認できます:
+
+	v, ok := <-ch
+
+受信する値がない、かつ、チャネルが閉じているなら、 `ok` の変数は、 `false` になります。
+
+ループの `for`i`:=`range`c` は、チャネルが閉じられるまで、チャネルから値を繰り返し受信し続けます。
+
+*注意:*
+送り手のチャネルだけをcloseしてください。受け手はcloseしてはいけません。
+もしcloseしたチャネルへ送信すると、パニック( _panic_ )します。
+
+*もう一つ注意:*
+チャネルは、ファイルとは異なり、通常は、closeする必要はありません。
+closeするのは、これ以上値が来ないことを受け手が知る必要があるときにだけです。
+例えば、 `range` ループを終了するという場合です。
+
+.play concurrency/range-and-close.go
+
+* Select
+
+`select` ステートメントは、goroutineを複数の通信操作で待たせます。
+
+`select` は、複数ある `case` のいずれかが準備できるようになるまでブロックし、準備ができた `case` を実行します。
+もし、複数の `case` の準備ができている場合、 `case` はランダムに選択されます。
+
+.play concurrency/select.go
+
+* Default Selection
+
+どの `case` も準備ができていないのであれば、 `select` の中の `default` が実行されます。
+
+ブロックせずに送受信するなら、 `default` の `case` を使ってください:
+
+	select {
+	case i := <-c:
+		// use i
+	default:
+		// receiving from c would block
+	}
+
+.play concurrency/default-selection.go
+
+* Exercise: Equivalent Binary Trees
+
+同じ数列を保持するような、形の異なる[[https://ja.wikipedia.org/wiki/二分木][二分木( _binary_tree_ )]]は多く存在し得ます。
+例えば、ここに数列 1, 1, 2, 3, 5, 8, 13 を保持する2つの二分木があります。
+
+.image /content/img/tree.png
+
+2つの二分木が同じ数列を保持しているかどうかを確認する機能は、多くの言語においてかなり複雑です。
+
+シンプルな解決方法を記述するために、Goの並行性( _concurrency_ )とチャネルを利用してみます。
+
+例では、型を以下のように定義している `tree` パッケージを利用します:
+
+	type Tree struct {
+		Left  *Tree
+		Value int
+		Right *Tree
+	}
+
+[[javascript:click('.next-page')][続く...]]
+
+* Exercise: Equivalent Binary Trees
+
+*1.*  `Walk` 関数を実装してください。
+
+*2.* `Walk` 関数をテストしてください。
+
+関数 `tree.New(k)` は、値( `k`, `2k`, `3k`, ..., `10k` )をもつ、ランダムに構造化 (しかし常にソートされています) した二分木を生成します。
+
+新しいチャネル `ch` を生成し、 `Walk` を動かしましょう:
+
+	go Walk(tree.New(1), ch)
+
+そして、そのチャネルから値を読み出し、10個の値を表示してください。
+それは、 1, 2, 3, ..., 10 という表示になるでしょう。
+
+*3.* `Same` 関数を実装してください。 `t1` と `t2` が同じ値を保存しているどうかを判断するため、 `Walk` を使ってください。
+
+*4.*  `Same` 関数をテストしてください。
+
+`Same(tree.New(1),`tree.New(1))` は、 `true` を返すように、
+`Same(tree.New(1),`tree.New(2))` は、 `false` を返すようにします。
+
+`Tree` のドキュメントは [[https://godoc.org/golang.org/x/tour/tree#Tree][こちら]] です。
+
+.play concurrency/exercise-equivalent-binary-trees.go
+
+* sync.Mutex
+
+チャネルが、goroutine間で通信するための素晴らしい方法であることを見てきました。
+
+しかし、通信が必要ない場合はどうでしょう？
+コンフリクトを避けるために、一度に1つのgoroutineだけが変数にアクセスできるようにしたい場合はどうでしょうか？
+
+このコンセプトは、[[https://ja.wikipedia.org/wiki/%E6%8E%92%E4%BB%96%E5%88%B6%E5%BE%A1][排他制御( _mutual_exclusion_ )]]と呼ばれ、このデータ構造を指す一般的な名前は [[https://ja.wikipedia.org/wiki/%E3%83%9F%E3%83%A5%E3%83%BC%E3%83%86%E3%83%83%E3%82%AF%E3%82%B9][ *mutex* (ミューテックス)]]です。
+
+Goの標準ライブラリは、排他制御を[[https://golang.org/pkg/sync/#Mutex][`sync.Mutex`]]と次の二つのメソッドで提供します:
+
+- `Lock`
+- `Unlock`
+
+`Inc` メソッドにあるように、 `Lock` と `Unlock` で囲むことで排他制御で実行するコードを定義できます。
+
+`Value` メソッドのように、mutexがUnlockされることを保証するために `defer` を使うこともできます。
+
+.play concurrency/mutex-counter.go
+
+* Exercise: Web Crawler
+
+この演習では、ウェブクローラ( _web_crawler_ )を並列化するため、Goの並行性の特徴を使います。
+
+同じURLを2度取ってくることなく並列してURLを取ってくるように、 `Crawl` 関数を修正してみてください(注1)。
+
+*補足*: 工夫すれば `Crawl` 関数のみの修正で実装できますが、無理に `Crawl` 関数内部に収める必要はありません。
+
+*ひとこと*: mapにフェッチしたURLのキャッシュを保持できますが、mapだけでは並行実行時の安全性はありません!
+
+.play concurrency/exercise-web-crawler.go
+
+* Where to Go from here...
+
+#appengine: [[https://golang.org/dl/][Goをインストール]]
+#appengine: することで、Go言語を始めることができます。
+
+#appengine: Goをインストールしたなら、
+この
+[[https://golang.org/doc/][Goのドキュメント]] は、
+#appengine: 次に参考にする
+始める
+にはとても良いものです。
+ここにはリファレンスやチュートリアル、ビデオなどがあります。
+
+Goのコードの構成や、動かし方を学ぶためには、 [[https://www.youtube.com/watch?v=XCsL89YtqCs][この動画]] を見てください。また、 [[https://golang.org/doc/code.html][How to Write Go Code]] を読んでください。
+
+もし、標準ライブラリに関してヘルプが必要なら、
+[[https://golang.org/pkg/][パッケージリファレンス]]
+を見てください。
+言語自身に関してのヘルプは、
+[[https://golang.org/ref/spec][Go言語仕様]]
+がとても参考になります。
+
+Goの並行性のモデルについてもっと調べてみたいなら、
+[[https://www.youtube.com/watch?v=f6kdp27TYZs][Go Concurrency Patterns]]
+([[https://talks.golang.org/2012/concurrency.slide][slides]])
+や、
+[[https://www.youtube.com/watch?v=QDDwwePbDtw][Advanced Go Concurrency Patterns]]
+([[https://talks.golang.org/2013/advconc.slide][slides]])
+を見たり、
+codewalk:
+[[https://golang.org/doc/codewalk/sharemem/][Share Memory by Communicating]]
+を読んでみてください。
+
+Webアプリケーションをはじめてみるなら、
+[[https://vimeo.com/53221558][A simple programming environment]]
+([[https://talks.golang.org/2012/simple.slide][slides]])
+を見たり、
+チュートリアル:
+[[https://golang.org/doc/articles/wiki/][Writing Web Applications]]
+を読んでみてください。
+
+[[https://golang.org/doc/codewalk/functions/][First Class Functions in Go]]
+では、Goの関数型の興味深い側面を教えてくれます。
+
+[[https://blog.golang.org/][Go Blog]]
+には、Goに関する素晴らしい記事の多くのアーカイブがあります。
+
+もちろん、 [[https://golang.org][golang.org]]
+も見てください。
+
+_翻訳：_ [[https://github.com/atotto/go-tour-jp][_@atotto_]]

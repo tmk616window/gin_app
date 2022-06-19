@@ -1,0 +1,249 @@
+Packages, variables, and functions.
+Go プログラムの基本的なコンポーネントを学びます。
+
+The Go Authors
+https://golang.org
+
+* Packages
+
+Goのプログラムは、パッケージ( _package_ )で構成されます。
+
+プログラムは `main` パッケージから開始されます。
+
+このプログラムでは `"fmt"` と `"math/rand"` パッケージをインポート( _import_ )しています。
+
+規約で、パッケージ名はインポートパスの最後の要素と同じ名前になります。
+例えば、インポートパスが `"math/rand"` のパッケージは、 `package`rand` ステートメントで始まるファイル群で構成します。
+
+#appengine: *Note:* ここで実行するプログラムは常に同じ環境で実行されます
+#appengine: ので、[[http://ja.wikipedia.org/wiki/%E6%93%AC%E4%BC%BC%E4%B9%B1%E6%95%B0][擬似乱数]]を返す [[https://golang.org/pkg/math/rand/#Rand.Intn][`rand.Intn`]] はいつも同じ数を返します。
+#appengine:
+#appengine: (数を強制的に変える場合は、乱数生成でシードを与える必要があります。[[https://golang.org/pkg/math/rand/#Seed][`rand.Seed`]]を見てみてください。
+#appengine: playground 上での時間は一定なので他のものをシードとして使う必要があります。)
+
+.play basics/packages.go
+
+* Imports
+
+このコードでは、括弧でパッケージのインポートをグループ化し、factoredインポートステートメント( _factored_import_statement_ )としています。
+
+もちろん、複数のインポートステートメントで書くこともできます:
+
+	import "fmt"
+	import "math"
+
+ですが、先に示したfactoredインポートステートメントの方がより良いスタイルです。
+
+訳注: ここの _factored_ の意味は、「要素化、グループ化、整理済み」ということです。良い日本語募集中。
+
+.play basics/imports.go
+
+* Exported names
+
+Goでは、最初の文字が大文字で始まる名前は、外部のパッケージから参照できるエクスポート（公開）された名前( _exported_name_ )です。
+例えば、 `Pi` は `math` パッケージでエクスポートされています。
+
+小文字ではじまる `pi` や `hoge` などはエクスポートされていない名前です。
+
+パッケージをインポートすると、そのパッケージがエクスポートしている名前を参照することができます。
+エクスポートされていない名前(小文字ではじまる名前)は、外部のパッケージからアクセスすることはできません。
+
+コードを実行し、エラーを確認してみましょう。
+
+エラーを修正するために、 `math.pi` を `math.Pi` に書き換え、もう一度実行してみてください。
+
+.play basics/exported-names.go
+
+* Functions
+
+関数は、0個以上の引数を取ることができます。
+
+この例では、 `add` 関数は、 `int` 型の２つのパラメータを取ります。
+
+変数名の *後ろ* に型名を書くことに注意してください。
+
+(型をなぜこのように宣言するのか、についての詳細な情報は、 [[https://blog.golang.org/gos-declaration-syntax][記事「Go's declaration syntax」]] を参照してください。)
+
+.play basics/functions.go
+
+* Functions continued
+
+関数の２つ以上の引数が同じ型である場合には、最後の型を残して省略して記述できます。
+
+この例では、
+
+	x int, y int
+
+を
+
+	x, y int
+
+へ省略できます。
+
+.play basics/functions-continued.go
+
+* Multiple results
+
+関数は複数の戻り値を返すことができます。
+
+この `swap` 関数は2つの string を返します。
+#補足
+とても簡単に交換できますね！
+
+.play basics/multiple-results.go
+
+* Named return values
+
+Goでの戻り値となる変数に名前をつける( _named_return_value_ )ことができます。戻り値に名前をつけると、関数の最初で定義した変数名として扱われます。
+
+この戻り値の名前は、戻り値の意味を示す名前とすることで、関数のドキュメントとして表現するようにしましょう。
+
+名前をつけた戻り値の変数を使うと、 `return` ステートメントに何も書かずに戻すことができます。これを "naked" return と呼びます。
+
+例のコードのように、naked returnステートメントは、短い関数でのみ利用すべきです。長い関数で使うと読みやすさ( _readability_ )に悪影響があります。
+
+# TODO: 読みやすさに関する資料
+
+.play basics/named-results.go
+
+* Variables
+
+`var` ステートメントは変数( _variable_ )を宣言します。
+関数の引数リストと同様に、複数の変数の最後に型を書くことで、変数のリストを宣言できます。
+
+`var` ステートメントはパッケージ、または、関数で利用できます。例のコードで示します。
+
+.play basics/variables.go
+
+* Variables with initializers
+
+`var` 宣言では、変数毎に初期化子( _initializer_ )を与えることができます。
+
+初期化子が与えられている場合、型を省略できます。その変数は初期化子が持つ型になります。
+
+.play basics/variables-with-initializers.go
+
+* Short variable declarations
+
+関数の中では、 `var` 宣言の代わりに、短い `:=` の代入文を使い、暗黙的な型宣言ができます。
+
+なお、関数の外では、キーワードではじまる宣言( `var`, `func`, など)が必要で、 `:=` での暗黙的な宣言は利用できません。
+
+.play basics/short-variable-declarations.go
+
+* Basic types
+
+Go言語の基本型(組み込み型)は次のとおりです:
+
+	bool
+
+	string
+
+	int  int8  int16  int32  int64
+	uint uint8 uint16 uint32 uint64 uintptr
+
+	byte // uint8 の別名
+
+	rune // int32 の別名
+	     // Unicode のコードポイントを表す
+
+	float32 float64
+
+	complex64 complex128
+
+(訳注：runeとは古代文字を表す言葉(runes)ですが、Goでは文字そのものを表すためにruneという言葉を使います。)
+
+# TODO: コードポイントのwikipediaを示す
+
+例では、いくつかの型の変数を示しています。また、変数宣言は、インポートステートメントと同様に、まとめて( _factored_ )宣言可能です。
+
+`int`, `uint`, `uintptr` 型は、32-bitのシステムでは32 bitで、64-bitのシステムでは64 bitです。
+サイズ、符号なし( _unsigned_ )整数の型を使うための特別な理由がない限り、整数の変数が必要な場合は `int` を使うようにしましょう。
+
+.play basics/basic-types.go
+
+* Zero values
+
+変数に初期値を与えずに宣言すると、ゼロ値( _zero_value_ )が与えられます。
+
+ゼロ値は型によって以下のように与えられます:
+
+- 数値型(int,floatなど): `0`
+- bool型: `false`
+- string型: `""` (空文字列( _empty_string_ ))
+
+.play basics/zero.go
+
+* Type conversions
+
+型変換
+
+変数 `v` 、型 `T` があった場合、 `T(v)` は、変数 `v` を `T` 型へ変換します。
+
+いくつかの変換を見てみましょう:
+
+	var i int = 42
+	var f float64 = float64(i)
+	var u uint = uint(f)
+
+よりシンプルに記述できます:
+
+	i := 42
+	f := float64(i)
+	u := uint(f)
+
+C言語とは異なり、Goでの型変換は明示的な変換が必要です。
+例のコードで、 `float64` や `uint` の変換を削除し、何が起きるのか確認しましょう。
+
+.play basics/type-conversions.go
+
+* Type inference
+
+# TODO: ここで言っているinterfaceは誤解を与えそう
+
+明示的な型を指定せずに変数を宣言する場合( `:=` や `var`=` のいずれか)、変数の型は右側の変数から型推論されます。
+# TODO: 型推論wikipedia
+
+右側の変数が型を持っている場合、左側の新しい変数は同じ型になります:
+
+	var i int
+	j := i // j is an int
+
+右側に型を指定しない数値である場合、左側の新しい変数は右側の定数の精度に基いて `int`, `float64`, `complex128` の型になります:
+
+	i := 42           // int
+	f := 3.142        // float64
+	g := 0.867 + 0.5i // complex128
+
+例のコードにある変数 `v` の初期値を変えて、型がどのように変化するかを見てみてください。
+
+.play basics/type-inference.go
+
+* Constants
+
+定数( _constant_ )は、 `const` キーワードを使って変数と同じように宣言します。
+
+定数は、文字(character)、文字列(string)、boolean、数値(numeric)のみで使えます。
+
+なお、定数は `:=` を使って宣言できません。
+
+.play basics/constants.go
+
+* Numeric Constants
+
+数値の定数は、高精度な *値* ( _values_ )です。
+
+型のない定数は、その状況によって必要な型を取ることになります。
+
+例で `needInt(Big)` も出力してみてください。
+
+( `int` は最大64-bitの整数を保持できますが、環境によっては精度が低いこともあります)
+
+.play basics/numeric-constants.go
+
+* Congratulations!
+
+この章はこれで終わりです。
+
+[[/list][章のリスト]]から学びたいところを見ても良いですし、
+[[javascript:click('.next-page')][>]] をクリックして次の章へ進みましょう。

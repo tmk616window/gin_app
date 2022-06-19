@@ -1,0 +1,6 @@
+892e45863a8af47b6423e629beeea1e6217d81fa		branch 'master' of https://go.googlesource.com/tour
+6411b957db618d9bb7a070639ab9b899262f86cf		branch 'release-branch.go1.2' of https://go.googlesource.com/tour
+205ec9d7e5ad32cab8204ae8e2ebe64f9a40a5f5		branch 'release-branch.go1.3' of https://go.googlesource.com/tour
+9635027095a34207d33f63c201672d7a9690553b		branch 'release-branch.go1.4' of https://go.googlesource.com/tour
+f69272c4f15f6e1cebd219efa6b3035a750d0b94		tag 'go.r60' of https://go.googlesource.com/tour
+241d4738f53e9d144c5b601f4f579778859d6847		tag 'v0.1.0' of https://go.googlesource.com/tour

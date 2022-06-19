@@ -1,0 +1,355 @@
+More types: structs, slices, and maps.
+既存の型に基づいて新しい型を定義する方法を学ぶ: このレッスンでは構造体、配列、slice、map について説明します。
+
+The Go Authors
+https://golang.org
+
+* Pointers
+
+Goはポインタを扱います。
+ポインタは値のメモリアドレスを指します。
+
+変数 `T` のポインタは、 `*T` 型で、ゼロ値は `nil` です。
+
+	var p *int
+
+`&` オペレータは、そのオペランド( _operand_ )へのポインタを引き出します。
+
+	i := 42
+	p = &i
+
+`*` オペレータは、ポインタの指す先の変数を示します。
+
+	fmt.Println(*p) // ポインタpを通してiから値を読みだす
+	*p = 21         // ポインタpを通してiへ値を代入する
+
+これは "dereferencing" または "indirecting" としてよく知られています。
+
+なお、C言語とは異なり、ポインタ演算はありません。
+
+.play moretypes/pointers.go
+
+* Structs
+
+`struct` (構造体)は、フィールド( _field_ )の集まりです。
+
+.play moretypes/structs.go
+
+* Struct Fields
+
+structのフィールドは、ドット( `.` )を用いてアクセスします。
+
+.play moretypes/struct-fields.go
+
+* Pointers to structs
+
+structのフィールドは、structのポインタを通してアクセスすることもできます。
+
+フィールド `X` を持つstructのポインタ `p` がある場合、フィールド `X` にアクセスするには `(*p).X` のように書くことができます。
+しかし、この表記法は大変面倒ですので、Goでは代わりに `p.X` と書くこともできます。
+
+.play moretypes/struct-pointers.go
+
+* Struct Literals
+
+structリテラルは、フィールドの値を列挙することで新しいstructの初期値の割り当てを示しています。
+
+`Name:` 構文を使って、フィールドの一部だけを列挙することができます(この方法でのフィールドの指定順序は関係ありません)。
+例では `X:`1` として `X` だけを初期化しています。
+
+`&` を頭に付けると、新しく割り当てられたstructへのポインタを戻します。
+
+.play moretypes/struct-literals.go
+
+
+* Arrays
+
+`[n]T` 型は、型 `T` の `n` 個の変数の配列( _array_ )を表します。
+
+以下は、intの10個の配列を宣言しています:
+
+	var a [10]int
+
+配列の長さは、型の一部分です。ですので、配列のサイズを変えることはできません。
+これは制約のように思えますが、心配しないでください。
+Goは配列を扱うための便利な方法を提供しています。
+
+.play moretypes/array.go
+
+
+* Slices
+
+配列は固定長です。一方で、スライスは可変長です。より柔軟な配列と見なすこともできます。
+実際には、スライスは配列よりもより一般的です。
+
+型 `[]T` は 型 `T` のスライスを表します。
+
+コロンで区切られた二つのインデックス low と high の境界を指定することによってスライスが形成されます:
+
+	a[low : high]
+
+これは最初の要素は含むが、最後の要素は除いた半開区間を選択します。
+
+次の式は a の要素の内 1 から 3 を含むスライスを作ります。
+
+	a[1:4]
+
+.play moretypes/slices.go
+
+
+* Slices are like references to arrays
+
+スライスは配列への参照のようなものです。
+
+スライスはどんなデータも格納しておらず、単に元の配列の部分列を指し示しています。
+
+スライスの要素を変更すると、その元となる配列の対応する要素が変更されます。
+
+同じ元となる配列を共有している他のスライスは、それらの変更が反映されます。
+
+.play moretypes/slices-pointers.go
+
+
+* Slice literals
+
+スライスのリテラルは長さのない配列リテラルのようなものです。
+
+これは配列リテラルです:
+
+	[3]bool{true, true, false}
+
+そして、これは上記と同様の配列を作成し、それを参照するスライスを作成します:
+
+	[]bool{true, true, false}
+
+.play moretypes/slice-literals.go
+
+
+* Slice defaults
+
+スライスするときは、それらの既定値を代わりに使用することで上限または下限を省略することができます。
+
+既定値は下限が 0 で上限はスライスの長さです。
+
+以下の配列において
+
+	var a [10]int
+
+これらのスライス式は等価です:
+
+	a[0:10]
+	a[:10]
+	a[0:]
+	a[:]
+
+.play moretypes/slice-bounds.go
+
+
+* Slice length and capacity
+
+スライスは長さ( _length_ )と容量( _capacity_ )の両方を持っています。
+
+スライスの長さは、それに含まれる要素の数です。
+
+スライスの容量は、スライスの最初の要素から数えて、元となる配列の要素数です。
+
+スライス `s` の長さと容量は `len(s)` と `cap(s)` という式を使用して得ることができます。
+
+十分な容量を持って提供されているスライスを再スライスすることによって、スライスの長さを伸ばすことができます。
+その容量を超えて伸ばしたときに何が起こるかを見るため、プログラム例でのスライスのいずれかの操作を変更してみてください。
+
+.play moretypes/slice-len-cap.go
+
+
+* Nil slices
+
+スライスのゼロ値は `nil` です。
+
+`nil` スライスは 0 の長さと容量を持っており、何の元となる配列も持っていません。
+
+.play moretypes/nil-slices.go
+
+
+* Creating a slice with make
+
+スライスは、組み込みの `make` 関数を使用して作成することができます。
+これは、動的サイズの配列を作成する方法です。
+
+`make` 関数はゼロ化された配列を割り当て、その配列を指すスライスを返します。
+
+	a := make([]int, 5)  // len(a)=5
+
+`make` の3番目の引数に、スライスの容量( _capacity_ )を指定できます。
+`cap(b)` で、スライスの容量を返します:
+
+	b := make([]int, 0, 5) // len(b)=0, cap(b)=5
+
+	b = b[:cap(b)] // len(b)=5, cap(b)=5
+	b = b[1:]      // len(b)=4, cap(b)=4
+
+.play moretypes/making-slices.go
+
+
+* Slices of slices
+
+スライスは、他のスライスを含む任意の型を含むことができます。
+
+.play moretypes/slices-of-slice.go
+
+
+* Appending to a slice
+
+スライスへ新しい要素を追加するには、Goの組み込みの `append` を使います。
+`append` についての詳細は [[https://golang.org/pkg/builtin/#append][documentation]] を参照してみてください。
+
+	func append(s []T, vs ...T) []T
+
+上の定義を見てみましょう。 `append` への最初のパラメータ `s` は、追加元となる `T` 型のスライスです。
+残りの `vs` は、追加する `T` 型の変数群です。
+
+`append` の戻り値は、追加元のスライスと追加する変数群を合わせたスライスとなります。
+
+もし、元の配列 `s` が、変数群を追加する際に容量が小さい場合は、より大きいサイズの配列を割り当て直します。
+その場合、戻り値となるスライスは、新しい割当先を示すようになります。
+
+(スライスについてより詳しく学ぶには、[[https://blog.golang.org/go-slices-usage-and-internals][Slices: usage and internals]]を読んでみてください)
+
+.play moretypes/append.go
+
+
+* Range
+
+`for` ループに利用する `range` は、スライスや、マップ( `map` )をひとつずつ反復処理するために使います。
+
+スライスをrangeで繰り返す場合、rangeは反復毎に2つの変数を返します。
+1つ目の変数はインデックス( _index_ )で、2つ目はインデックスの場所の要素のコピーです。
+
+.play moretypes/range.go
+
+* Range continued
+
+インデックスや値は、 " `_` "(アンダーバー) へ代入することで捨てることができます。
+
+    for i, _ := range pow
+    for _, value := range pow
+
+もしインデックスだけが必要なのであれば、2つ目の値を省略します。
+
+    for i := range pow
+
+.play moretypes/range-continued.go
+
+* Exercise: Slices
+
+`Pic` 関数を実装してみましょう。
+このプログラムを実行すると、生成した画像が下に表示されるはずです。
+この関数は、長さ `dy` のsliceに、各要素が8bitのunsigned int型で長さ `dx` のsliceを割り当てたものを返すように実装する必要があります。
+画像は、整数値をグレースケール(実際はブルースケール)として解釈したものです。
+
+生成する画像は、好きに選んでください。例えば、面白い関数に、 `(x+y)/2` 、 `x*y` 、 `x^y` などがあります。
+
+ヒント:( `[][]uint8` に、各 `[]uint8` を割り当てるためにループを使用する必要があります)
+
+ヒント:( `uint8(intValue)` を型の変換のために使います)
+
+#補足： `fmt.Println` などを用いて標準出力すると画像が表示されなくなってしまうため、使わないでください。
+
+.play moretypes/exercise-slices.go
+
+* Maps
+
+`map` はキーと値とを関連付けます(マップします)。
+
+マップのゼロ値は `nil` です。
+`nil` マップはキーを持っておらず、またキーを追加することもできません。
+
+`make` 関数は指定された型のマップを初期化して、使用可能な状態で返します。
+
+.play moretypes/maps.go
+
+* Map literals
+
+mapリテラルは、structリテラルに似ていますが、 *キー* ( _key_ )が必要です。
+
+.play moretypes/map-literals.go
+
+* Map literals continued
+
+もし、mapに渡すトップレベルの型が単純な型名である場合は、リテラルの要素から推定できますので、その型名を省略することができます。
+
+.play moretypes/map-literals-continued.go
+
+* Mutating Maps
+
+map `m` の操作を見ていきましょう。
+
+`m` へ要素(elem)の挿入や更新:
+
+	m[key] = elem
+
+要素の取得:
+
+	elem = m[key]
+
+要素の削除:
+
+	delete(m, key)
+
+キーに対する要素が存在するかどうかは、2つの目の値で確認します:
+
+	elem, ok = m[key]
+
+もし、 `m` に `key` があれば、変数 `ok` は `true` となり、存在しなければ、 `ok` は `false` となります。
+
+なお、mapに `key` が存在しない場合、 `elem` はmapの要素の型のゼロ値となります。
+
+*Note:* もし `elem` や `ok` をまだ宣言していなければ、次のように `:=` で短く宣言できます:
+
+	elem, ok := m[key]
+
+.play moretypes/mutating-maps.go
+
+* Exercise: Maps
+
+`WordCount` 関数を実装してみましょう。string `s` で渡される文章の、各単語の出現回数のmapを返す必要があります。
+`wc.Test` 関数は、引数に渡した関数に対しテストスイートを実行し、成功か失敗かを結果に表示します。
+
+[[https://golang.org/pkg/strings/#Fields][strings.Fields]] で、何かヒントを得ることができるはずです。
+
+Note: このテストスイートで何を入力とし、何を期待しているかについては、[[https://github.com/golang/tour/blob/master/wc/wc.go][golang.org/x/tour/wc]]を見てみてください。
+
+.play moretypes/exercise-maps.go
+
+* Function values
+
+関数も変数です。他の変数のように関数を渡すことができます。
+
+関数値( _function_value_ )は、関数の引数に取ることもできますし、戻り値としても利用できます。
+
+.play moretypes/function-values.go
+
+* Function closures
+
+Goの関数は [[https://ja.wikipedia.org/wiki/クロージャ][クロージャ( _closure_ )]] です。
+クロージャは、それ自身の外部から変数を参照する関数値です。
+この関数は、参照された変数へアクセスして変えることができ、その意味では、その関数は変数へ"バインド"( _bind_ )されています。
+
+例えば、 `adder` 関数はクロージャを返しています。
+各クロージャは、それ自身の `sum` 変数へバインドされます。
+
+.play moretypes/function-closures.go
+
+* Exercise: Fibonacci closure
+
+関数を用いた面白い例を見てみましょう。
+
+`fibonacci` (フィボナッチ)関数を実装しましょう。この関数は、連続する[[https://ja.wikipedia.org/wiki/%E3%83%95%E3%82%A3%E3%83%9C%E3%83%8A%E3%83%83%E3%83%81%E6%95%B0][フィボナッチ数]](0, 1, 1, 2, 3, 5, ...)を返す関数(クロージャ)を返します。
+
+.play moretypes/exercise-fibonacci-closure.go
+
+* Congratulations!
+
+この章はこれで終わりです。
+
+[[/list][章のリスト]]から学びたいところを見ても良いですし、
+[[javascript:click('.next-page')][>]] をクリックして次の章へ進みましょう。
